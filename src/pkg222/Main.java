@@ -39,37 +39,76 @@ public class Main {
     {
         String input;
         StringTokenizer idata;
-        int primeraLinea = 0,cont = 0;
-        float distancia = 0,capacidad = 0,millasXgalon = 0,dolares = 0,cantidadGasolineras = 0;
-
+        int cont = 0, contTotal = 1;
+        double distanciaTotal = 0,capacidad = 0,millasXgalon = 0,dolares = 0,cantidadGasolineras = 0;
+        double[] millas = new double[100];
+        double[] precios = new double[100];
+        
         while ((input = Main.ReadLn (255)) != null)
         {
           if(cont == 0){
             idata = new StringTokenizer (input);
-            distancia = Float.parseFloat(idata.nextToken());
-            if(distancia < 0){
+            distanciaTotal = Double.parseDouble(idata.nextToken());
+            if(distanciaTotal < 0){
                 return ;
             }
           }else if(cont == 1){
               idata = new StringTokenizer (input);
-              capacidad = Float.parseFloat(idata.nextToken());
-              millasXgalon = Float.parseFloat(idata.nextToken());
-              dolares = Float.parseFloat(idata.nextToken());
-              cantidadGasolineras = Float.parseFloat(idata.nextToken());
+              capacidad = Double.parseDouble(idata.nextToken());
+              millasXgalon = Double.parseDouble(idata.nextToken());
+              dolares = Double.parseDouble(idata.nextToken());
+              cantidadGasolineras = Double.parseDouble(idata.nextToken());
           }else if(cont == 2){
             for(int i = 0;i < cantidadGasolineras; i++){
-                input = Main.ReadLn (255);
-                
+                if(i != 0){
+                    input = Main.ReadLn (255);
+                }
+                idata = new StringTokenizer (input);
+                millas[i] = Double.parseDouble(idata.nextToken());
+                precios[i] = Double.parseDouble(idata.nextToken());
             }
-          }
-          System.out.println (distancia);
-          
-          
-          if(cont == (cantidadGasolineras + 1)){
-              cont = -1;
+            
+            System.out.println("Data Set #"+contTotal);
+            double resultado = Math.round((dolares+(recorrido(0,0,distanciaTotal, capacidad, millasXgalon, dolares, cantidadGasolineras, millas, precios)/100.00))*100.00)/100.00;
+            String resultadoString = String.valueOf(resultado);
+            
+            if(resultadoString.length() < 5 && resultado > 9.99){
+                resultadoString = resultadoString + 0;
+            }else if(resultadoString.length() < 4 && resultado < 10){
+                resultadoString = resultadoString + 0;
+            }
+            
+            System.out.println("minimum cost = $"+resultadoString);
+            
+            
           }
           cont++;
           
+          if(cont == 3){ 
+              cont = 0;
+              contTotal++;
+          }
+          
         }
+    }
+    
+    double recorrido(double distancia, int estacion,double distanciaTotal, double capacidad, double millasXgalon, double dolares, double cantidadGasolineras, double[] millas, double[] precios){
+        if(distancia + capacidad * millasXgalon >= distanciaTotal || estacion == cantidadGasolineras){
+            return 0;
+        }
+        
+        double mejor = 10000000;
+        for(int i = estacion; i < cantidadGasolineras; i++) {
+            double combustible_usado = (millas[i] - distancia) / millasXgalon;
+            if(capacidad - combustible_usado < 0) break;
+            if(capacidad - combustible_usado <= capacidad / 2) {
+                mejor = Math.min(mejor, (200 + combustible_usado * precios[i] + recorrido(millas[i], i + 1, distanciaTotal, capacidad, millasXgalon, dolares, cantidadGasolineras, millas, precios)));
+            } else if(capacidad - combustible_usado > (capacidad / 2) && (i + 1) < cantidadGasolineras && millas[i + 1] > distancia + capacidad * millasXgalon) {
+                return (200 + (combustible_usado * precios[i]) + recorrido(millas[i], i + 1, distanciaTotal, capacidad, millasXgalon, dolares, cantidadGasolineras, millas, precios));
+            }
+        }
+        
+        return mejor;
+ 
     }
 }
